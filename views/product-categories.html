@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Home</title>
+  <link rel="stylesheet" href="css/global.css">
+  <link rel="stylesheet" href="css/product-categories.css">
+</head>
+
+<body>
+  <header class="site-header">
+    <div class="wrapper site-header_wrapper">
+      <a href="#" class="brand" style="margin-top: 20px;">Brand</a>
+    </div>
+  </header>
+  <main>
+    <div class="container">
+      <h2>Κατηγορίες</h2>
+      <script type="text/x-handlebars-template" id="item-template">
+        <div class="categories">
+          <div>
+            <a href="category.html?categoryId={{id}}"><img src="{{img_url}}" alt="img"/></a>
+          </div>
+          <div>
+            <h3 class="category-name">{{title}}</h3>
+            <ul class="sub-category">
+              {{#each subCategories}}
+              <li class="text-dark">{{this.title}}</li>
+              {{/each}}
+            </ul>
+          </div>
+        </div>
+      </script>
+    </div>
+  </main>
+  <footer>
+    <div class="row_copyright">
+      <p>Copyright &copy; 2022</p>
+    </div>
+  </footer>
+  <script src="https://cdn.jsdelivr.net/npm/handlebars@latest/dist/handlebars.js"></script>
+  <script>
+    let items;
+    fetch('https://wiki-shop.onrender.com/categories')
+      .then((res) => res.json())
+      .then((data) => {
+        items = data;
+        let source = document.querySelector("#item-template").innerHTML;
+        let template = Handlebars.compile(source);
+        let list = document.querySelector('.container');
+        for (let item of items) {
+          fetch(`https://wiki-shop.onrender.com/categories/${item.id}/subcategories`)
+          .then((res) => res.json())
+          .then((data) => {
+            item.subCategories = data;
+            let listItem = template(item);
+            list.innerHTML += listItem;
+          }).catch(err => console.log(err));
+          console.log(item);
+        }
+      }).catch((err) => {
+        console.log(err);
+      });
+  </script>
+</body>
+</html>
+  

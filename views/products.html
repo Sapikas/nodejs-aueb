@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Προϊόντα</title>
+  <link rel="stylesheet" href="css/global.css">
+  <link rel="stylesheet" href="css/product.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrapper site-header_wrapper">
+      <a href="#" class="brand">Brand</a>
+      <nav class="nav">
+        <!-- <img class="nav_toggle" aria-expanded="false" src="/images/icons8-menu-50.png" alt="burger menu"/> -->
+        <ul class="nav_wrapper">
+          <li class="nav_item"><a href="index.html">Home</a></li>
+          <li aria-label="loginModal" class="nav_item"><div class="button" style="cursor: pointer;">Login</div></li>
+          <li aria-label="cart-button" class="nav_item">
+            <script type="text/x-handlebars-template" id="cart-size-template">
+              <a href="cart.html?username={{username}}&sessionId={{sessionId}}" class="button-cart">
+                <div>Cart</div>
+                <div class="size-box">
+                  <div>{{size}}</div>
+                </div>
+              </a>
+            </script>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+  <main>
+    <div class="container">
+      <h2>Προϊόντα</h2>
+      <div class="error-wrapper">
+        <p>Παρακαλώ συνδεθείτε για προσθήκη προϊόντων στο καλάθι</p>
+      </div>
+      <div>
+        <div class="menu">
+          <button class="burger">Φίλτρα</button>
+            <nav class="nav-links">
+              <h3>Υποκατηγορίες</h3>
+              <script type="text/x-handlebars-template" id="filter-template">
+                <div subCategoryId="{{id}}" class="nav-link-item">{{title}}</div>
+              </script>
+            </nav>
+          <div class="close-button">X</div>
+        </div>
+      </div>
+      <div class="products">
+        <script type="text/x-handlebars-template" id="item-template">
+          <div class="product text-dark">
+            <div class="product-img">
+              <img src="{{image}}" alt="laptop">
+            </div>
+            <div class="product-info">
+              <div class="price">{{cost}}$</div>
+              <div class="desc">{{description}}</div>
+              <div class="sku">{{title}}</div>
+              <button productId="{{id}}" onclick="addProduct(event)">Αγορά</button>
+            </div>
+          </div>
+        </script>
+      </div>
+    </div>
+  </main>
+  <footer>
+    <div class="row_copyright">
+      <p>Copyright &copy; 2022</p>
+    </div>
+  </footer>
+
+  <div class="modal-background">
+    <div class="modal-wrapper">
+      <div class="error-box">
+        <p>An error has occurred. Please try again.</p>
+      </div>
+      <div class="modal-content">
+        <form>
+          <div class="form-group">
+            <label for="username">Username:</label>
+            <input type="text" class="form-control" id="username" style="border-radius: 5px;">
+          </div>
+          <div class="form-group">
+            <label for="password">Password:</label>
+            <input type="password" class="form-control" id="password" style="border-radius: 5px;">
+          </div>
+          <button type="submit" class="btn btn-primary" id="submit-button">Submit</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/handlebars@latest/dist/handlebars.js"></script>
+  <script>
+    const url = new URL(window.location.href);
+    const searchParams = new URLSearchParams(url.search);
+    let list;
+    let source;
+    let template;
+    let items;
+    fetch(`https://wiki-shop.onrender.com/categories/${searchParams.get('categoryId')}/products`)
+    .then((res) => res.json())
+    .then((data) => {
+      items = data;
+      source = document.querySelector("#item-template").innerHTML;
+      template = Handlebars.compile(source);
+      list = document.querySelector('.products');
+      for (let item of data) {
+        let listItem = template(item);
+        list.innerHTML += listItem;
+      }
+    }).catch(err => console.log(err));
+
+    fetch(`https://wiki-shop.onrender.com/categories/${searchParams.get('categoryId')}/subcategories`)
+    .then((res) => res.json())
+    .then((data) => {
+      let source = document.querySelector("#filter-template").innerHTML;
+      let template = Handlebars.compile(source);
+      const menuList = document.querySelector('.nav-links');
+      for (let item of data) {
+        menuList.innerHTML += template(item);
+      }
+      linkItems();
+    }).catch(err => console.log(err));
+
+    const burger = document.querySelector('.burger');
+    const navLinks = document.querySelector('.nav-links');
+    const closeButton = document.querySelector('.close-button');
+    const loginModal = document.querySelector('[aria-label="loginModal"]');
+    const modalBg = document.querySelector('.modal-background');
+    burger.addEventListener('click', () => {
+      navLinks.classList.toggle('nav-active');
+      burger.classList.toggle('burger-active');
+      closeButton.classList.toggle('active');
+    });
+    closeButton.addEventListener('click', () => {
+      navLinks.classList.toggle('nav-active');
+      burger.classList.toggle('burger-active');
+      closeButton.classList.toggle('active');
+    });
+    loginModal.addEventListener('click', () => {
+      modalBg.classList.toggle('login-active');
+    });
+    modalBg.addEventListener('click', (e) => {
+      if (e.target.classList.contains('modal-background')) {
+        modalBg.classList.remove('login-active');
+      }
+    });
+
+    function linkItems() {
+      const navLinkItem = document.querySelectorAll('.nav-link-item');
+      navLinkItem.forEach((element) => {
+        element.addEventListener('click', (e) => {
+          const filtered = items.filter((el) => {
+            return el.subcategory_id == e.target.getAttribute('subcategoryid');
+          });
+          if (!filtered) {
+            return;
+          }
+          list.innerHTML = '';
+          for (let item of filtered) {
+            let listItem = template(item);
+            list.innerHTML += listItem;
+          }
+        });
+      });
+    }
+
+    const submitButton = document.getElementById("submit-button");
+    let sessionId;
+    let closeErrorBox;
+    let username;
+    let password;
+
+    submitButton.addEventListener('click', (e) => {
+      e.preventDefault();
+
+      username = document.getElementById("username").value;
+      password = document.getElementById("password").value;
+
+      fetch('http://localhost:3500/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({username: username, password: password})
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.msg === 'Unauthorized') {
+          clearTimeout(closeErrorBox);
+          const errorBox = document.querySelector('.error-box');
+          errorBox.classList.remove('error-active');
+          errorBox.classList.add('error-active');
+          closeErrorBox = setTimeout(() => {
+            errorBox.remove('error-active');
+          }, 3000);
+          return;
+        }
+        sessionId = data.sessionId;
+        modalBg.classList.remove('login-active');
+        sizeOfProducts();
+        console.log(sessionId);
+      }).catch(err => console.log(err));
+    });
+
+    function addProduct(e) {
+      const productId = e.target.getAttribute('productid');
+      const productObj = items.find(el => {
+        return el.id === +productId;
+      });
+      const data = {
+        id: productObj.id,
+        title: productObj.title,
+        image: productObj.image,
+        price: productObj.cost,
+      }
+      fetch('http://localhost:3500/auth/product', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({username: username, sessionId: sessionId, product: data})
+      }).then(res => res.json())
+      .then(data => {
+        if (data.msg === 'Unauthorized') {
+          const errorWrapper = document.querySelector('.error-wrapper');
+          errorWrapper.classList.add('error-active');
+          setTimeout(() => {
+            errorWrapper.classList.remove('error-active');
+          }, 5000);
+        }
+      }).catch(err => console.log(err));
+      sizeOfProducts();
+    }
+
+    let cartSource = document.querySelector('#cart-size-template').innerHTML;
+    let templateSource = Handlebars.compile(cartSource);
+    let buttonCart = document.querySelector('[aria-label="cart-button"]');
+
+    function sizeOfProducts() {
+      fetch(`http://localhost:3500/auth/product/size?username=${username}&sessionId=${sessionId}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.msg === 'Unauthorized') return;
+        buttonCart.innerHTML = templateSource({ size: data.size, cart: 'Cart', username: username, sessionId: sessionId });
+      }).catch(err => console.log(err));
+    }
+  </script>
+</body>
+</html>

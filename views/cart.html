@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product Table</title>
+  <link rel="stylesheet" href="css/global.css">
+  <link rel="stylesheet" href="css/cart.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrapper site-header_wrapper">
+      <a href="#" class="brand">Brand</a>
+      <nav class="nav">
+        <img class="nav_toggle" aria-expanded="false" src="/images/icons8-menu-50.png" alt="burger menu"/>
+        <ul class="nav_wrapper">
+          <li class="nav_item"><a href="index.html">Home</a></li>
+          <li class="nav_item">
+            <a href="cart.html" class="button-cart">Cart</a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+  <main>
+    <div class="container">
+      <table id="productTable">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Cost</th>
+            <th>Quantity</th>
+          </tr>
+        </thead>
+        <tbody id="productTableBody">
+          <script id="product-template" type="text/x-handlebars-template">
+            {{#each this}}
+            <tr>
+              <td>{{productTitle}}</td>
+              <td>{{productCost}}</td>
+              <td>{{quantity}}</td>
+            </tr>
+            {{/each}}
+          </script>
+        </tbody>
+      </table>
+      <br>
+      <p>Total Cost: <span id="totalCost"></span></p>
+    </div>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/handlebars@latest/dist/handlebars.js"></script>
+  <script>
+    const url = new URL(window.location.href);
+    const searchParams = new URLSearchParams(url.search);
+    fetch(`http://localhost:3500/auth/product?username=${searchParams.get('username')}&sessionId=${searchParams.get('sessionId')}`)
+      .then(response => response.json())
+      .then(products => {
+        // Compile Handlebars template
+        const source = document.getElementById('product-template').innerHTML;
+        const template = Handlebars.compile(source);
+        const productTableBody = document.getElementById('productTableBody');
+        // render the template using the data
+        productTableBody.innerHTML = template(products.data);
+        // calculate total cost
+        document.getElementById("totalCost").innerHTML = products.totalCost;
+      });
+  </script>
+</body>
+</html>
